@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robot Sprite Upload</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            background-color: #a4c1ab;
+        }
+        h1 {
+            text-align: center;
+            color: #e84a27;
+        }
+        .upload-container {
+            background-color: #f5f1e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .upload-info {
+            margin-bottom: 20px;
+        }
+        .instructions {
+            background-color: rgba(232, 74, 39, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .upload-controls {
+            margin-top: 20px;
+            text-align: center;
+        }
+        button {
+            background-color: #e84a27;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #d03b1a;
+        }
+        .success-message {
+            background-color: #90be6d;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        .error-message {
+            background-color: #e63946;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 4px;
+            height: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #e84a27;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .status {
+            margin-top: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Robot Sprite Upload</h1>
+    
+    <div class="upload-container">
+        <div class="upload-info">
+            <h2>Upload Robot Sprites</h2>
+            <p>Upload a ZIP file containing your robot evolution sprites to automatically configure your Sweat Pets application.</p>
+        </div>
+        
+        <div class="instructions">
+            <h3>ZIP File Requirements:</h3>
+            <ul>
+                <li>Your ZIP should contain 5 image files for the robot's evolution stages</li>
+                <li>Name the files: <code>robot_stage1.png</code>, <code>robot_stage2.png</code>, etc. through <code>robot_stage5.png</code></li>
+                <li>PNG format is recommended for best quality</li>
+                <li>Images will be automatically extracted and placed in the correct location</li>
+            </ul>
+        </div>
+        
+        <form id="uploadForm" class="upload-form" enctype="multipart/form-data">
+            <div>
+                <label for="zipFile">Select Robot Sprites ZIP:</label>
+                <input type="file" id="zipFile" name="zipFile" accept=".zip" required>
+            </div>
+            
+            <div class="upload-controls">
+                <button type="submit">Upload & Extract</button>
+            </div>
+        </form>
+        
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-bar">
+                <div id="progress" class="progress"></div>
+            </div>
+            <div id="status" class="status">Uploading...</div>
+        </div>
+        
+        <div id="successMessage" class="success-message">
+            Robot sprites extracted successfully! Redirecting to your Sweat Pets app...
+        </div>
+        
+        <div id="errorMessage" class="error-message">
+            Error processing ZIP file. Please ensure it contains the required image files.
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('zipFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showError('Please select a ZIP file');
+                return;
+            }
+            
+            if (file.type !== 'application/zip' && !file.name.endsWith('.zip')) {
+                showError('Please upload a valid ZIP file');
+                return;
+            }
+            
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progress');
+            const status = document.getElementById('status');
+            
+            progressContainer.style.display = 'block';
+            hideMessages();
+            
+            const formData = new FormData();
+            formData.append('zipFile', file);
+            
+            try {
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressBar.style.width = percentComplete + '%';
+                        status.textContent = 'Uploading: ' + Math.round(percentComplete) + '%';
+                    }
+                });
+                
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            status.textContent = 'Extraction complete!';
+                            showSuccess(response.message || 'Robot sprites extracted successfully!');
+                            
+                            // Redirect after a delay
+                            setTimeout(() => {
+                                window.location.href = '/';
+                            }, 3000);
+                        } else {
+                            showError(response.message || 'Error extracting sprites');
+                        }
+                    } else {
+                        showError('Server error: ' + xhr.status);
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    showError('Network error occurred');
+                };
+                
+                xhr.open('POST', '/upload-sprites-zip', true);
+                xhr.send(formData);
+                
+            } catch (error) {
+                showError('Error: ' + error.message);
+            }
+        });
+        
+        function showSuccess(message) {
+            const successMessage = document.getElementById('successMessage');
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+        
+        function hideMessages() {
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html> 

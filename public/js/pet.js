@@ -1,6 +1,6 @@
 /**
  * Pet Class: Handles the pet's stats, evolution, and rendering
- * Mid-century modern design with Feltron-inspired data visualization
+ * Mid-century modern design using sprite images of robot evolution
  */
 class Pet {
     constructor() {
@@ -18,20 +18,11 @@ class Pet {
         
         // Color palette for mid-century modern design
         this.colors = {
-            primary: [
-                '#E8430F', // Level 1-20: Orange
-                '#F29F05', // Level 21-40: Amber
-                '#0A9396', // Level 41-60: Teal
-                '#005F73', // Level 61-80: Deep blue
-                '#85B8AC'  // Level 81-100: Mint
-            ],
-            secondary: [
-                '#F29F05', // Level 1-20: Amber 
-                '#0A9396', // Level 21-40: Teal
-                '#005F73', // Level 41-60: Deep blue
-                '#85B8AC', // Level 61-80: Mint
-                '#E8430F'  // Level 81-100: Orange
-            ]
+            primary: '#e84a27', // Bright orange for the robot
+            secondary: '#bd3a1e', // Darker orange for details
+            tertiary: '#f5844a', // Lighter orange for highlights
+            background: '#a4c1ab', // Mint green background
+            outline: '#3b3b3b'     // Dark outline
         };
         
         // Canvas and context
@@ -42,8 +33,33 @@ class Pet {
         this.animationFrame = 0;
         this.lastTimestamp = 0;
         
+        // Load robot sprites
+        this.sprites = [];
+        this.loadSprites();
+        
         // Start animation loop
         this.animate();
+    }
+    
+    /**
+     * Load robot sprite images
+     */
+    loadSprites() {
+        // The evolution stages (1-5)
+        const totalStages = 5;
+        
+        for (let i = 1; i <= totalStages; i++) {
+            const img = new Image();
+            img.src = `images/robot_stage${i}.png`;
+            this.sprites.push(img);
+            
+            // Force error handling for sprite loading
+            img.onerror = () => {
+                console.error(`Failed to load sprite: robot_stage${i}.png`);
+                // Create a fallback colored rectangle if image fails to load
+                img._fallback = true;
+            };
+        }
     }
     
     /**
@@ -165,14 +181,14 @@ class Pet {
             // Show level up message
             const message = document.createElement('div');
             message.className = 'message';
-            message.style.backgroundColor = this.getPetColor();
+            message.style.backgroundColor = this.colors.primary;
             message.style.color = '#fff';
             
             // Multi-level up message
             if (newLevel > oldLevel + 1) {
-                message.textContent = `Wow! Your pet evolved ${newLevel - oldLevel} levels to level ${newLevel}!`;
+                message.textContent = `Wow! Your robot evolved ${newLevel - oldLevel} levels to level ${newLevel}!`;
             } else {
-                message.textContent = `Your pet evolved to level ${newLevel}!`;
+                message.textContent = `Your robot evolved to level ${newLevel}!`;
             }
             
             // Add to the body
@@ -197,30 +213,6 @@ class Pet {
                 }, 500);
             }, 4000);
         }
-    }
-    
-    /**
-     * Update the UI with current pet stats
-     */
-    updateUI() {
-        // Basic stats will be handled by the main app.js
-        // This method is kept simple for compatibility
-    }
-    
-    /**
-     * Get pet's color based on current level
-     */
-    getPetColor(type = 'primary') {
-        // Determine color tier based on level
-        let tier = 0;
-        
-        if (this.level <= 20) tier = 0;
-        else if (this.level <= 40) tier = 1;
-        else if (this.level <= 60) tier = 2;
-        else if (this.level <= 80) tier = 3;
-        else tier = 4;
-        
-        return this.colors[type][tier];
     }
     
     /**
@@ -286,43 +278,111 @@ class Pet {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Get pet colors based on level
-        const primaryColor = this.getPetColor('primary');
-        const secondaryColor = this.getPetColor('secondary');
+        // Draw background
+        this.ctx.fillStyle = this.colors.background;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Calculate the center of the canvas
-        const centerX = this.canvas.width / 2;
-        const centerY = this.canvas.height / 2;
+        // Draw base line
+        this.ctx.fillStyle = '#f5f1e6'; // off-white for the ground/floor
+        this.ctx.fillRect(0, this.canvas.height - 20, this.canvas.width, 20);
         
-        // Draw pet shape based on tier (5 visual tiers)
-        const tier = Math.min(4, Math.floor((this.level - 1) / 20));
+        // Get the current evolution stage (1-5)
+        const evolutionStage = this.getEvolutionStage();
+        const spriteIndex = evolutionStage - 1;
         
-        switch(tier) {
-            case 0: // Levels 1-20 (simplest geometric shapes)
-                this.drawTier1Pet(centerX, centerY, primaryColor, secondaryColor);
-                break;
-            case 1: // Levels 21-40 (more complex shapes)
-                this.drawTier2Pet(centerX, centerY, primaryColor, secondaryColor);
-                break;
-            case 2: // Levels 41-60 (complex patterns)
-                this.drawTier3Pet(centerX, centerY, primaryColor, secondaryColor);
-                break;
-            case 3: // Levels 61-80 (detailed form)
-                this.drawTier4Pet(centerX, centerY, primaryColor, secondaryColor);
-                break;
-            case 4: // Levels 81-100 (ultimate form)
-                this.drawTier5Pet(centerX, centerY, primaryColor, secondaryColor);
-                break;
+        // Calculate bounce for animation
+        const bounce = Math.sin(this.animationFrame * 0.1) * 2;
+        
+        // Check if sprite is loaded
+        if (this.sprites[spriteIndex] && !this.sprites[spriteIndex]._fallback) {
+            // Calculate position for the sprite
+            const sprite = this.sprites[spriteIndex];
+            
+            // The height we want the sprite to be
+            const targetHeight = this.canvas.height - 40;
+            
+            // Calculate width proportionally
+            const ratio = sprite.width / sprite.height;
+            const targetWidth = targetHeight * ratio;
+            
+            // Center the sprite horizontally
+            const x = (this.canvas.width - targetWidth) / 2;
+            
+            // Draw the sprite
+            this.ctx.drawImage(sprite, x, 10 + bounce, targetWidth, targetHeight);
+        } else {
+            // Fallback - draw a simple representation if sprite isn't loaded
+            this.drawFallbackRobot(evolutionStage, bounce);
         }
         
-        // Add level text for higher levels (21+)
-        if (this.level > 20) {
-            this.ctx.fillStyle = '#fff';
-            this.ctx.font = 'bold 14px "Helvetica Neue", Helvetica, sans-serif';
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            this.ctx.fillText(`${this.level}`, centerX, centerY);
-        }
+        // Add level indicator
+        this.drawLevelIndicator();
+    }
+    
+    /**
+     * Draw level indicator
+     */
+    drawLevelIndicator() {
+        // Add a small level indicator at the bottom right
+        this.ctx.fillStyle = this.colors.primary;
+        this.ctx.fillRect(this.canvas.width - 30, this.canvas.height - 20, 30, 20);
+        this.ctx.fillStyle = '#FFFFFF';
+        this.ctx.font = 'bold 12px "Helvetica Neue", Helvetica, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(`${this.level}`, this.canvas.width - 15, this.canvas.height - 10);
+    }
+    
+    /**
+     * Draw fallback robot if sprite isn't loaded
+     */
+    drawFallbackRobot(evolutionStage, bounce) {
+        const ctx = this.ctx;
+        const width = this.canvas.width;
+        const height = this.canvas.height;
+        const baseY = height - 20;
+        
+        // Different sizes based on evolution stage
+        const size = 30 + (evolutionStage * 15);
+        const centerX = width / 2;
+        
+        // Draw simple robot representation
+        ctx.fillStyle = this.colors.primary;
+        
+        // Body
+        this.roundRect(ctx, centerX - size/2, baseY - size - 10 + bounce, size, size, 5, this.colors.primary);
+        
+        // Head
+        ctx.beginPath();
+        ctx.arc(centerX, baseY - size - 30 + bounce, size/3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Eyes
+        ctx.fillStyle = this.colors.background;
+        const eyeSize = size/10;
+        ctx.beginPath();
+        ctx.arc(centerX - eyeSize*2, baseY - size - 33 + bounce, eyeSize, 0, Math.PI * 2);
+        ctx.arc(centerX + eyeSize*2, baseY - size - 33 + bounce, eyeSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Text showing sprite couldn't load
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '10px "Helvetica Neue", Helvetica, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Sprite ' + evolutionStage, centerX, baseY - size - 10 + bounce);
+    }
+    
+    /**
+     * Get the evolution stage based on level
+     * Matches the 5 stages in the sprite sheet
+     */
+    getEvolutionStage() {
+        if (this.level <= 20) return 1;
+        if (this.level <= 40) return 2;
+        if (this.level <= 60) return 3;
+        if (this.level <= 80) return 4;
+        return 5;
     }
     
     /**
@@ -344,235 +404,6 @@ class Pet {
         
         // Continue animation loop
         requestAnimationFrame(this.animate.bind(this));
-    }
-    
-    // Different pet drawing methods for each tier - Feltron-inspired mid-century modern style
-    
-    // Tier 1: Simple shapes (Levels 1-20)
-    drawTier1Pet(x, y, color, secondaryColor) {
-        const bounce = Math.sin(this.animationFrame * 0.1) * 3;
-        
-        // Draw background shape (circle)
-        this.ctx.beginPath();
-        this.ctx.arc(x, y + bounce, 40, 0, Math.PI * 2);
-        this.ctx.fillStyle = color;
-        this.ctx.fill();
-        
-        // Draw simple geometric patterns
-        this.ctx.beginPath();
-        this.ctx.arc(x, y + bounce, 25, 0, Math.PI * 2);
-        this.ctx.fillStyle = secondaryColor;
-        this.ctx.fill();
-        
-        // Eyes (simple dots)
-        this.ctx.beginPath();
-        this.ctx.arc(x - 10, y - 5 + bounce, 3, 0, Math.PI * 2);
-        this.ctx.arc(x + 10, y - 5 + bounce, 3, 0, Math.PI * 2);
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fill();
-        
-        // Simple mouth
-        this.ctx.beginPath();
-        this.ctx.arc(x, y + 10 + bounce, 8, 0, Math.PI);
-        this.ctx.strokeStyle = '#FFFFFF';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
-    }
-    
-    // Tier 2: More complex shapes (Levels 21-40)
-    drawTier2Pet(x, y, color, secondaryColor) {
-        const bounce = Math.sin(this.animationFrame * 0.1) * 3;
-        
-        // Draw main body (rounded rectangle)
-        this.roundRect(
-            this.ctx, 
-            x - 40, 
-            y - 30 + bounce, 
-            80, 
-            60, 
-            8, 
-            color
-        );
-        
-        // Draw decorative pattern
-        this.ctx.beginPath();
-        for (let i = 0; i < 3; i++) {
-            this.ctx.rect(x - 25 + (i * 25), y + 10 + bounce, 15, 15);
-        }
-        this.ctx.fillStyle = secondaryColor;
-        this.ctx.fill();
-        
-        // Draw eyes
-        this.ctx.beginPath();
-        this.ctx.arc(x - 15, y - 10 + bounce, 5, 0, Math.PI * 2);
-        this.ctx.arc(x + 15, y - 10 + bounce, 5, 0, Math.PI * 2);
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fill();
-        
-        // Draw pupils
-        this.ctx.beginPath();
-        this.ctx.arc(x - 15, y - 10 + bounce, 2, 0, Math.PI * 2);
-        this.ctx.arc(x + 15, y - 10 + bounce, 2, 0, Math.PI * 2);
-        this.ctx.fillStyle = '#000000';
-        this.ctx.fill();
-        
-        // Draw smile
-        this.ctx.beginPath();
-        this.ctx.moveTo(x - 10, y + 5 + bounce);
-        this.ctx.quadraticCurveTo(x, y + 12 + bounce, x + 10, y + 5 + bounce);
-        this.ctx.strokeStyle = '#FFFFFF';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
-    }
-    
-    // Tier 3: Complex patterns (Levels 41-60)
-    drawTier3Pet(x, y, color, secondaryColor) {
-        const bounce = Math.sin(this.animationFrame * 0.1) * 2;
-        
-        // Draw main body (hexagon)
-        this.ctx.beginPath();
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i;
-            const px = x + Math.cos(angle) * 45;
-            const py = y + Math.sin(angle) * 45 + bounce;
-            
-            if (i === 0) {
-                this.ctx.moveTo(px, py);
-            } else {
-                this.ctx.lineTo(px, py);
-            }
-        }
-        this.ctx.closePath();
-        this.ctx.fillStyle = color;
-        this.ctx.fill();
-        
-        // Draw internal star pattern
-        this.ctx.beginPath();
-        for (let i = 0; i < 5; i++) {
-            const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
-            const px = x + Math.cos(angle) * 25;
-            const py = y + Math.sin(angle) * 25 + bounce;
-            
-            if (i === 0) {
-                this.ctx.moveTo(px, py);
-            } else {
-                this.ctx.lineTo(px, py);
-            }
-        }
-        this.ctx.closePath();
-        this.ctx.fillStyle = secondaryColor;
-        this.ctx.fill();
-        
-        // Draw eyes
-        this.ctx.beginPath();
-        this.ctx.arc(x - 15, y - 10 + bounce, 5, 0, Math.PI * 2);
-        this.ctx.arc(x + 15, y - 10 + bounce, 5, 0, Math.PI * 2);
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fill();
-        
-        // Draw pupils
-        this.ctx.beginPath();
-        this.ctx.arc(x - 15, y - 10 + bounce, 2, 0, Math.PI * 2);
-        this.ctx.arc(x + 15, y - 10 + bounce, 2, 0, Math.PI * 2);
-        this.ctx.fillStyle = '#000000';
-        this.ctx.fill();
-    }
-    
-    // Tier 4: Detailed form (Levels 61-80)
-    drawTier4Pet(x, y, color, secondaryColor) {
-        const bounce = Math.sin(this.animationFrame * 0.1) * 2;
-        const rotation = this.animationFrame * 0.01;
-        
-        // Draw rotating background
-        this.ctx.save();
-        this.ctx.translate(x, y + bounce);
-        this.ctx.rotate(rotation);
-        
-        // Main square
-        this.ctx.fillStyle = color;
-        this.ctx.fillRect(-35, -35, 70, 70);
-        
-        // Rotating lines
-        this.ctx.strokeStyle = secondaryColor;
-        this.ctx.lineWidth = 6;
-        this.ctx.beginPath();
-        for (let i = 0; i < 4; i++) {
-            this.ctx.moveTo(0, 0);
-            const angle = (Math.PI / 2) * i + rotation * 2;
-            const px = Math.cos(angle) * 60;
-            const py = Math.sin(angle) * 60;
-            this.ctx.lineTo(px, py);
-        }
-        this.ctx.stroke();
-        
-        this.ctx.restore();
-        
-        // Draw center circle
-        this.ctx.beginPath();
-        this.ctx.arc(x, y + bounce, 25, 0, Math.PI * 2);
-        this.ctx.fillStyle = secondaryColor;
-        this.ctx.fill();
-        
-        // Draw inner circle
-        this.ctx.beginPath();
-        this.ctx.arc(x, y + bounce, 15, 0, Math.PI * 2);
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fill();
-    }
-    
-    // Tier 5: Ultimate form (Levels 81-100)
-    drawTier5Pet(x, y, color, secondaryColor) {
-        const bounce = Math.sin(this.animationFrame * 0.1) * 2;
-        const rotation = this.animationFrame * 0.01;
-        
-        // Create a complex radial sunburst design
-        this.ctx.save();
-        this.ctx.translate(x, y + bounce);
-        
-        // Main circle
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, 45, 0, Math.PI * 2);
-        this.ctx.fillStyle = color;
-        this.ctx.fill();
-        
-        // Rays
-        this.ctx.rotate(rotation);
-        for (let i = 0; i < 12; i++) {
-            this.ctx.rotate(Math.PI / 6);
-            this.ctx.beginPath();
-            this.ctx.moveTo(40, 0);
-            this.ctx.lineTo(60, 0);
-            this.ctx.lineTo(50, 15);
-            this.ctx.closePath();
-            this.ctx.fillStyle = secondaryColor;
-            this.ctx.fill();
-        }
-        
-        // Create geometric pattern in the center
-        this.ctx.rotate(-rotation * 3);
-        
-        // Draw pattern
-        const patternSize = 30;
-        for (let i = 0; i < 4; i++) {
-            this.ctx.rotate(Math.PI / 2);
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, 0);
-            this.ctx.lineTo(patternSize, 0);
-            this.ctx.lineTo(patternSize, patternSize);
-            this.ctx.closePath();
-            this.ctx.fillStyle = secondaryColor;
-            this.ctx.globalAlpha = 0.7;
-            this.ctx.fill();
-            this.ctx.globalAlpha = 1;
-        }
-        
-        // Inner circle
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, 20, 0, Math.PI * 2);
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fill();
-        
-        this.ctx.restore();
     }
     
     /**
