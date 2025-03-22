@@ -1,0 +1,22 @@
+{
+  "name": "sweat-pets",
+  "version": "0.1.0",
+  "description": "A Tamagotchi-style app that evolves based on your physical activity",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "tamagotchi",
+    "health",
+    "fitness",
+    "pet"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemon": "^3.1.9"
+  }
+}

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweat Pets - Fitness Analytics Companion</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sweat Pets</h1>
+            <p class="tagline">A data-driven fitness companion that evolves with your activity metrics</p>
+        </header>
+        
+        <main>
+            <div class="pet-container">
+                <canvas id="pet-canvas" width="300" height="300"></canvas>
+                
+                <div class="pet-info">
+                    <div class="info-item">
+                        <span class="info-label">Level</span>
+                        <span id="pet-level" class="info-value">1</span>
+                        <div class="level-progress-container">
+                            <div id="level-progress-bar" class="level-progress-bar" style="width: 0%"></div>
+                        </div>
+                        <div class="level-progress-info">
+                            <span id="current-level">1</span>
+                            <span id="next-level">2</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Today's Steps</span>
+                        <span id="steps-today" class="info-value">0</span>
+                        <span id="daily-goal" class="info-value-small">Goal: 10,000</span>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-label">Total Steps</span>
+                        <span id="total-steps" class="info-value">0</span>
+                        <span id="level-requirement" class="info-value-small">Next level: 5,000</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="data-wrapper">
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-value" id="health-value">50</div>
+                        <div class="stat-label">Health</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="happiness-value">50</div>
+                        <div class="stat-label">Happiness</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="energy-value">50</div>
+                        <div class="stat-label">Energy</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="strength-value">10</div>
+                        <div class="stat-label">Strength</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-value" id="agility-value">10</div>
+                        <div class="stat-label">Agility</div>
+                    </div>
+                </div>
+                
+                <div class="pet-stats">
+                    <div class="stat">
+                        <div class="stat-header">
+                            <span>Health</span>
+                            <span id="health-percent" class="value">50%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="health-bar" class="progress-fill" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-header">
+                            <span>Happiness</span>
+                            <span id="happiness-percent" class="value">50%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="happiness-bar" class="progress-fill" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-header">
+                            <span>Energy</span>
+                            <span id="energy-percent" class="value">50%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="energy-bar" class="progress-fill" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-header">
+                            <span>Strength</span>
+                            <span id="strength-percent" class="value">10%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="strength-bar" class="progress-fill" style="width: 10%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-header">
+                            <span>Agility</span>
+                            <span id="agility-percent" class="value">10%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="agility-bar" class="progress-fill" style="width: 10%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="data-container">
+                    <div class="section-title">Weekly Activity</div>
+                    <div class="chart-container" id="weekly-chart">
+                        <!-- Chart bars will be added via JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-section">
+                    <div class="section-title">Record Activity</div>
+                    <div class="step-input">
+                        <div>
+                            <label for="steps">Steps Taken</label>
+                            <input type="number" id="steps" min="0" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="add-steps-btn">Record Steps</button>
+                        <button id="reset-steps-btn" class="secondary">Reset Today's Steps</button>
+                    </div>
+        </div>
+                
+                <div class="control-section">
+                    <div class="section-title">Pet Management</div>
+                    <div class="action-buttons">
+                        <button id="feed-pet-btn" class="small">Feed Pet (+10 Health)</button>
+                        <button id="play-pet-btn" class="small">Play with Pet (+10 Happiness)</button>
+                        <button id="rest-pet-btn" class="small">Rest Pet (+10 Energy)</button>
+                        <button id="train-pet-btn" class="small">Train Pet (+5 Strength)</button>
+                        <button id="exercise-pet-btn" class="small">Exercise Pet (+5 Agility)</button>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <div class="section-title">Achievements</div>
+                    <div class="achievements-container" id="achievements-container">
+                        <!-- Achievements will be added via JS -->
+                    </div>
+        </div>
+
+                <div class="control-section">
+                    <div class="section-title">Data Management</div>
+                    <div class="action-buttons">
+                        <button id="export-data-btn" class="small secondary">Export Data</button>
+                        <button id="import-data-btn" class="small secondary">Import Data</button>
+                        <button id="reset-all-btn" class="small danger">Reset All Data</button>
+                    </div>
+                </div>
+        </div>
+        </main>
+        
+        <footer>
+            Sweat Pets &copy; 2025 — Activity Tracking Companion
+        </footer>
+    </div>
+    
+    <!-- Sound toggle button -->
+    <button id="sound-toggle" class="sound-toggle">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"></path>
+        </svg>
+    </button>
+    
+    <!-- Audio elements for sound effects -->
+    <audio id="click-sound" preload="auto" src="sounds/click.mp3"></audio>
+    <audio id="levelup-sound" preload="auto" src="sounds/levelup.mp3"></audio>
+    <audio id="achievement-sound" preload="auto" src="sounds/achievement.mp3"></audio>
+    
+    <script src="js/pet.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html> 
